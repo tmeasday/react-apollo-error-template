@@ -1,48 +1,68 @@
-import React, { Component } from "react";
-import { graphql } from "react-apollo";
-import gql from "graphql-tag";
+import React, { Component } from 'react';
+import { graphql } from 'react-apollo';
+import gql from 'graphql-tag';
+import { compose, withState } from 'recompose';
 
 class App extends Component {
   render() {
-    const { data: { loading, people } } = this.props;
+    const {
+      data: { loading, me },
+      setStage,
+    } = this.props;
+    console.log({ loading, me });
     return (
       <main>
-        <header>
-          <h1>Apollo Client Error Template</h1>
-          <p>
-            This is a template that you can use to demonstrate an error in
-            Apollo Client. Edit the source code and watch your browser window
-            reload with the changes.
-          </p>
-          <p>
-            The code which renders this component lives in{" "}
-            <code>./src/App.js</code>.
-          </p>
-          <p>
-            The GraphQL schema is in <code>./src/graphql/schema</code>.
-            Currently the schema just serves a list of people with names and
-            ids.
-          </p>
-        </header>
-        {loading ? (
-          <p>Loading…</p>
-        ) : (
-          <ul>
-            {people.map(person => <li key={person.id}>{person.name}</li>)}
-          </ul>
-        )}
+        <code>loading</code>
+        <pre>{loading}</pre>
+
+        <code>me</code>
+        <pre>{JSON.stringify(me)}</pre>
+
+        <button onClick={() => setStage(2)}>Stage 2</button>
       </main>
     );
   }
 }
 
-export default graphql(
-  gql`
-    query ErrorTemplate {
-      people {
-        id
-        name
-      }
+const SmallFragment = gql`
+  fragment SmallFragment on User {
+    id
+    sharedWithYouAccount {
+      id
     }
-  `
+  }
+`;
+
+const BigFragment = gql`
+  fragment BigFragment on Account {
+    id
+    membership {
+      id
+    }
+  }
+`;
+
+export default compose(
+  withState('stage', 'setStage', 1),
+  graphql(
+    gql`
+      query($useBig: Boolean!) {
+        me {
+          ...SmallFragment
+          sharedWithYouAccount @include(if: $useBig) {
+            ...BigFragment
+          }
+        }
+      }
+      ${SmallFragment}
+      ${BigFragment}
+    `,
+    {
+      options: ({ stage }) => ({
+        variables: {
+          useBig: stage === 2,
+        },
+      }),
+    }
+  )
 )(App);

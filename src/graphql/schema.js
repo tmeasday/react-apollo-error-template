@@ -1,31 +1,44 @@
-import {
-  GraphQLSchema,
-  GraphQLObjectType,
-  GraphQLID,
-  GraphQLString,
-  GraphQLList,
-} from 'graphql';
+import { GraphQLSchema, GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList } from 'graphql';
 
-const PersonType = new GraphQLObjectType({
-  name: 'Person',
+const MembershipType = new GraphQLObjectType({
+  name: 'Membership',
   fields: {
     id: { type: GraphQLID },
-    name: { type: GraphQLString },
   },
 });
 
-const peopleData = [
-  { id: 1, name: 'John Smith' },
-  { id: 2, name: 'Sara Smith' },
-  { id: 3, name: 'Budd Deey' },
-];
+const AccountType = new GraphQLObjectType({
+  name: 'Account',
+  fields: {
+    id: { type: GraphQLID },
+    membership: { type: MembershipType },
+  },
+});
+
+const UserType = new GraphQLObjectType({
+  name: 'Person',
+  fields: {
+    id: { type: GraphQLID },
+    sharedWithYouAccount: { type: AccountType },
+  },
+});
+
+const me = {
+  id: 'me',
+  sharedWithYouAccount: {
+    id: 'account',
+    membership: {
+      id: 'membership',
+    },
+  },
+};
 
 const QueryType = new GraphQLObjectType({
   name: 'Query',
   fields: {
-    people: {
-      type: new GraphQLList(PersonType),
-      resolve: () => peopleData,
+    me: {
+      type: UserType,
+      resolve: () => me,
     },
   },
 });
